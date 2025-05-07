@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>История логов</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      margin-right: 20px;
+    }
+    input[type="number"],
+    input[type="date"] {
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 14px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .export-buttons {
+      margin-bottom: 20px;
+    }
+    .export-buttons a {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 14px;
+      text-decoration: none;
+      margin-right: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 История логов просмотров</h2>
+
+  <form method="get">
+    <label>
+      Telegram ID:
+      <input type="number" name="telegram_id" value="{{ telegram_id or '' }}">
+    </label>
+    <label>
+      Дата (YYYY-MM-DD):
+      <input type="date" name="date" value="{{ date or '' }}">
+    </label>
+    <button type="submit">🔍 Фильтровать</button>
+    <a href="/"><button type="button">⟳ Сбросить</button></a>
+  </form>
+
+  <div class="export-buttons">
+    <a href="/export/excel?telegram_id={{ telegram_id or '' }}&date={{ date or '' }}">
+      📥 Экспорт в Excel
+    </a>
+    <a href="/export/pdf?telegram_id={{ telegram_id or '' }}&date={{ date or '' }}">
+      📄 Экспорт в PDF
+    </a>
+  </div>
+
+  {% if logs %}
+    <table>
+      <thead>
+        <tr>
+          <th>Время</th>
+          <th>Telegram ID</th>
+          <th>Username</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ log.viewer_telegram_id }}</td>
+          <td>{{ log.target_username }}</td>
+          <td>{{ "✅" if log.status == "viewed" else "❌" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>📭 Нет данных по выбранным фильтрам.</p>
+  {% endif %}
+</body>
+</html>
