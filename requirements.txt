@@ -1,7 +1,10 @@
-aiogram==3.4.1
+aiogram>=3.0.0
 SQLAlchemy==2.0.30
 python-dotenv==1.0.1
 apscheduler==3.10.4
 appium-python-client==3.1.0
 fpdf==1.7.2
 aiosqlite
+alembic
+asyncpg
+pandas

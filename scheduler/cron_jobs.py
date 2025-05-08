@@ -21,10 +21,9 @@ async def check_and_post_reels():
 
     for task in tasks:
         try:
-            # ⏱ Запускаем реальную логику размещения через Appium
+            print(f"[⏳] Запланированная публикация Reels ID {task.id}")
             await post_reels_to_stories(task)
-            
-            # ✅ Помечаем как размещённое
+
             async with async_session() as session:
                 await session.execute(
                     update(ScheduledPost)
@@ -32,11 +31,13 @@ async def check_and_post_reels():
                     .values(status="done")
                 )
                 await session.commit()
+            print(f"[✅] Reels ID {task.id} успешно опубликован")
 
         except Exception as e:
-            print(f"[❌] Ошибка при публикации Reels: {e}")
+            print(f"[❌] Ошибка при публикации Reels ID {task.id}: {e}")
 
-def run_story_publisher():
+def start_scheduler():
     scheduler = AsyncIOScheduler(timezone="UTC")
     scheduler.add_job(check_and_post_reels, "interval", minutes=1)
     scheduler.start()
+    print("[🕒] Планировщик Reels-сторий запущен (каждую минуту)")

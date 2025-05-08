@@ -8,10 +8,12 @@ from db.database import async_session
 from db.models import StoryViewLog
 from admin_panel.routes.export import router as export_router
 
+
 app = FastAPI()
 templates = Jinja2Templates(directory="admin_panel/templates")
 
 app.include_router(export_router)
+run_story_publisher()
 
 # 🔁 Планировщик запускается при старте приложения
 @app.on_event("startup")

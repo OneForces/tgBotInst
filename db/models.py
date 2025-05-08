@@ -49,3 +49,12 @@ class ScheduledPost(Base):
     scheduled_time = Column(DateTime, nullable=False)
     is_posted = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class ViewSession(Base):
+    __tablename__ = "view_sessions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, nullable=False)  # Telegram ID
+    started_at = Column(DateTime, default=datetime.utcnow)
+    ended_at = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
