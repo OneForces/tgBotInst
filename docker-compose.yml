@@ -1,6 +1,53 @@
 version: '3.9'
 
 services:
+  appium:
+    image: budtmo/docker-android-xvfb:latest
+    privileged: true
+    environment:
+      - DEVICE="Nexus 5"
+      - APP_PACKAGES=com.instagram.android
+      - APP_ACTIVITY=.activity.MainTabActivity
+    ports:
+      - "4723:4723"
+      - "6080:6080"  # веб-интерфейс эмулятора
+
+  scheduler:
+    build: .
+    command: python -m scheduler.reels_scheduler
+    depends_on:
+      - bot
+      - postgres
+  view-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile  # при необходимости – отдельный Dockerfile
+    command: python -m scheduler.view_scheduler
+    depends_on:
+      - bot
+      - postgres
+      - appium
+  appium1:
+    image: budtmo/docker-android-x86-11.0
+    container_name: appium1
+    privileged: true
+    ports:
+      - "4723:4723"     # Appium server
+      - "6080:6080"     # Web VNC
+    environment:
+      - DEVICE=Samsung Galaxy S10
+      - APPIUM=true
+      - AUTO_RECORD=false
+  appium2:
+    image: budtmo/docker-android-x86-11.0
+    container_name: appium2
+    privileged: true
+    ports:
+      - "4724:4723"
+      - "6081:6080"
+    environment:
+      - DEVICE=Pixel 5
+      - APPIUM=true
   postgres:
     image: postgres:15
     restart: always
@@ -23,6 +70,6 @@ services:
     volumes:
       - .:/app
     command: python -m bot.main  # адаптируй под свою структуру
-
+      
 volumes:
   postgres_data:

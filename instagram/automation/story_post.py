@@ -43,8 +43,8 @@ def post_reels_to_story(driver, reels_url):
         search_input.send_keys(reels_url)
         sleep(3)
 
-        # Предполагаем переход по ссылке через внутренний WebView
-        # (в зависимости от реализации Instagram может потребоваться иная логика)
+        # Здесь может быть требование нажать Enter или выбрать ссылку из результатов
+        # (можно расширить при необходимости)
 
         # Поделиться в сторис
         share_button = driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,

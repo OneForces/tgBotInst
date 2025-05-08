@@ -3,6 +3,7 @@ from instagram.automation.view_stories import create_viewer_driver, view_stories
 from db.database import async_session
 from db.models import StoryViewLog
 from aiogram import F
+from scheduler.cron_jobs import check_and_post_reels
 from datetime import datetime
 
 router = Router()
@@ -61,3 +62,11 @@ async def start_view(msg: types.Message):
     )
     await msg.bot.send_message(chat_id=ADMIN_ID, text=admin_text, parse_mode="HTML")
 
+@router.message(F.text.lower() == "проверить публикации")
+async def trigger_manual_check(message: types.Message):
+    await message.answer("⏳ Проверяю отложенные публикации...")
+    try:
+        await check_and_post_reels()
+        await message.answer("✅ Проверка завершена.")
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при проверке: {e}")

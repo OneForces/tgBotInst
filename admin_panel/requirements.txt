@@ -9,3 +9,4 @@ fpdf
 openpyxl
 aiogram>=3.0.0
 pandas
+greenlet

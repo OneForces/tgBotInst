@@ -1,7 +1,6 @@
 from db.models import ReelsTask
 from db.database import async_session
-from datetime import datetime
-from sqlalchemy import select, update
+from sqlalchemy import update
 
 from appium import webdriver
 from appium.webdriver.common.appiumby import AppiumBy
@@ -14,71 +13,78 @@ CHROME_ACTIVITY = "com.google.android.apps.chrome.Main"
 APPIUM_SERVER_URL = "http://127.0.0.1:4723/wd/hub"
 
 def get_driver():
-    desired_caps = {
+    caps = {
         "platformName": "Android",
-        "deviceName": "emulator-5554",  # ⚙️ ADB device
+        "deviceName": "emulator-5554",
         "appPackage": INSTAGRAM_PACKAGE,
         "appActivity": INSTAGRAM_ACTIVITY,
-        "noReset": True,
-        "automationName": "UiAutomator2",
+        "noReset": False,
+        "automationName": "UiAutomator2"
     }
-    return webdriver.Remote(APPIUM_SERVER_URL, desired_caps)
+    return webdriver.Remote(APPIUM_SERVER_URL, caps)
+
+def login_to_instagram(driver, username, password):
+    try:
+        print(f"[🔐] Логинимся как {username}")
+        sleep(5)
+        driver.find_element(AppiumBy.XPATH, "//android.widget.EditText[1]").send_keys(username)
+        driver.find_element(AppiumBy.XPATH, "//android.widget.EditText[2]").send_keys(password)
+        driver.find_element(AppiumBy.XPATH, "//android.widget.Button").click()
+        sleep(6)
+        print("✅ Успешный вход")
+    except Exception as e:
+        print(f"⚠ Ошибка логина: {e}")
+
+def logout_from_instagram(driver):
+    try:
+        print("🚪 Выходим из аккаунта")
+        driver.find_element(AppiumBy.ACCESSIBILITY_ID, "Профиль").click()
+        sleep(2)
+        driver.find_element(AppiumBy.ACCESSIBILITY_ID, "Параметры").click()
+        sleep(2)
+        driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().textContains("Выйти")').click()
+        sleep(1)
+        driver.find_element(AppiumBy.ID, "android:id/button1").click()
+        sleep(2)
+        print("✅ Вышли из аккаунта")
+    except Exception as e:
+        print(f"⚠ Ошибка выхода: {e}")
 
 async def post_reels_to_stories(task: ReelsTask):
     print(f"[📲] Публикуем Reels: {task.reels_url}")
+    driver = webdriver.Remote(account.appium_url + "/wd/hub", caps)
 
     try:
-        driver = get_driver()
+        # 🔐 Логинимся под нужным аккаунтом
+        login_to_instagram(driver, task.instagram_login, task.instagram_password)
 
-        # 1. Открытие Reels в Chrome
+        # 🔗 Открытие Reels в Chrome
         driver.start_activity(CHROME_PACKAGE, CHROME_ACTIVITY)
         sleep(4)
         driver.get(task.reels_url)
-        sleep(5)
+        sleep(6)
 
-        # 2. Кнопка "..."
+        # 📤 Публикация в сторис
         try:
-            more_btn = driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
-                                           'new UiSelector().descriptionContains("Еще")')
-            more_btn.click()
+            driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().descriptionContains("Еще")').click()
             sleep(2)
-        except Exception:
-            print("⚠️ Не найдена кнопка 'Еще'")
-
-        # 3. Кнопка "Поделиться в сторис"
-        try:
-            share_btn = driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
-                                            'new UiSelector().textContains("в сторис")')
-            share_btn.click()
+            driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().textContains("в сторис")').click()
+            sleep(2)
+            driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().textContains("Поделиться")').click()
             sleep(3)
-        except Exception:
-            print("⚠️ Не найдена кнопка 'Поделиться в сторис'")
+            print("✅ Reels размещён")
+        except Exception as e:
+            print(f"⚠ Не удалось опубликовать: {e}")
 
-        # 4. Кнопка "Поделиться"
-        try:
-            post_btn = driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
-                                           'new UiSelector().textContains("Поделиться")')
-            post_btn.click()
-            sleep(3)
-        except Exception:
-            print("⚠️ Не найдена кнопка 'Поделиться'")
-
-        # 5. Завершение
-        driver.press_keycode(4)  # Назад
-        sleep(1)
-        driver.press_keycode(3)  # Домой
-
-        print(f"✅ Reels размещён: {task.reels_url}")
+        # 🚪 Логаут
+        logout_from_instagram(driver)
 
     except Exception as e:
-        print(f"❌ Ошибка Appium: {e}")
+        print(f"❌ Ошибка публикации: {e}")
     finally:
-        try:
-            driver.quit()
-        except:
-            pass
+        driver.quit()
 
-    # Обновление статуса
+    # ✅ Обновляем статус в базе
     async with async_session() as session:
         await session.execute(
             update(ReelsTask)
