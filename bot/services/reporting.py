@@ -1,6 +1,5 @@
 # bot/services/reporting.py
-
-from db.database import async_session
+from db.engine import async_session
 from db.models import ReelsTask, ViewTask, ViewResult
 
 async def get_reels_report(task_id: int) -> str:

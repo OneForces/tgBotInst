@@ -2,7 +2,7 @@ from db.models import ScheduledPost
 from datetime import datetime, timedelta
 
 async def schedule_reels_to_stories(reels_url: str, telegram_id: int, instagram_logins: list[str]):
-    from db.database import async_session
+    from db.engine import async_session
     async with async_session() as session:
         now = datetime.utcnow()
         for idx, login in enumerate(instagram_logins):

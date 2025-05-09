@@ -1,46 +1,53 @@
-from aiogram import Router, types, F
-from db.models import UserSubmission
-from db.database import async_session
-from aiogram.fsm.state import StatesGroup, State
+from aiogram import Router, F
+from aiogram.types import Message
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from db.database import async_session
+from db.models import Subscriber
+from sqlalchemy import select
+from aiogram.fsm.state import State, StatesGroup  
 
 router = Router()
 
-class SubmissionForm(StatesGroup):
-    instagram = State()
-    telegram = State()
-    reels = State()
+# FSM состояния
+class ProfileSubmission(StatesGroup):
+    instagram_login = State()
+    instagram_password = State()
 
-@router.message(F.text.lower() == "начать")
-async def start_submission(msg: types.Message, state: FSMContext):
-    await msg.answer("🔗 Пришли ссылку на свой Instagram-профиль:")
-    await state.set_state(SubmissionForm.instagram)
+@router.message(Command("submit_profile"))
+async def cmd_submit_profile(message: Message, state: FSMContext):
+    await message.answer("Введите ваш Instagram логин:")
+    await state.set_state(ProfileSubmission.instagram_login)
 
-@router.message(SubmissionForm.instagram)
-async def get_instagram(msg: types.Message, state: FSMContext):
-    await state.update_data(instagram_link=msg.text)
-    await msg.answer("🔗 Теперь ссылку на свой Telegram-профиль:")
-    await state.set_state(SubmissionForm.telegram)
+@router.message(ProfileSubmission.instagram_login)
+async def process_login(message: Message, state: FSMContext):
+    await state.update_data(instagram_login=message.text)
+    await message.answer("Введите пароль от Instagram:")
+    await state.set_state(ProfileSubmission.instagram_password)
 
-@router.message(SubmissionForm.telegram)
-async def get_telegram(msg: types.Message, state: FSMContext):
-    await state.update_data(telegram_link=msg.text)
-    await msg.answer("🎥 И наконец ссылку на Reels-видео:")
-    await state.set_state(SubmissionForm.reels)
-
-@router.message(SubmissionForm.reels)
-async def get_reels(msg: types.Message, state: FSMContext):
+@router.message(ProfileSubmission.instagram_password)
+async def process_password(message: Message, state: FSMContext):
     data = await state.get_data()
-    data["reels_link"] = msg.text
+    instagram_login = data["instagram_login"]
+    instagram_password = message.text
 
     async with async_session() as session:
-        session.add(UserSubmission(
-            telegram_id=msg.from_user.id,
-            instagram_link=data["instagram_link"],
-            telegram_link=data["telegram_link"],
-            reels_link=data["reels_link"]
-        ))
+        existing = await session.execute(
+            select(Subscriber).where(Subscriber.telegram_id == message.from_user.id)
+        )
+        sub = existing.scalar_one_or_none()
+        if sub:
+            sub.instagram_login = instagram_login
+            sub.instagram_password = instagram_password
+        else:
+            sub = Subscriber(
+                telegram_id=message.from_user.id,
+                instagram_login=instagram_login,
+                instagram_password=instagram_password,
+            )
+            session.add(sub)
+
         await session.commit()
 
-    await msg.answer("✅ Спасибо! Все данные сохранены.")
+    await message.answer("✅ Профиль Instagram сохранён.")
     await state.clear()

@@ -1,7 +1,7 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 from sqlalchemy import select, desc
-from db.database import async_session
+from db.engine import async_session
 from db.models import StoryViewLog
 
 router = Router()

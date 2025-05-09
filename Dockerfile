@@ -27,6 +27,6 @@ COPY . .
 
 # Указываем переменные окружения
 ENV PYTHONUNBUFFERED=1
-
+ENV DATABASE_URL="postgresql+asyncpg://botuser:botpass@postgres:5432/botdb"
 # Стартовая команда — FastAPI или aiogram запуск (пример)
 CMD ["python", "-m", "bot.main"]

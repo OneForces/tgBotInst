@@ -1,4 +1,4 @@
-from db.database import async_session
+from db.engine import async_session
 from db.models import StoryViewLog
 from sqlalchemy import select
 from datetime import datetime

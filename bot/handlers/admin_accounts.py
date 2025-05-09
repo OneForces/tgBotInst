@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
-from db.database import async_session
+from db.engine import async_session
 from db.models import InstagramAccount
 
 router = Router()

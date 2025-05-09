@@ -1,0 +1,30 @@
+FROM androidsdk/android-30
+
+USER root
+
+# Обновление и установка зависимостей
+RUN apt-get update && \
+    apt-get install -y curl gnupg2 build-essential openjdk-11-jdk-headless unzip && \
+    curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g appium && \
+    appium driver install uiautomator2 && \
+    apt-get install -y xvfb fluxbox && \
+    apt-get clean
+
+# Установка Android system image + создание AVD 'test'
+ENV ANDROID_SDK_ROOT=/opt/android-sdk-linux
+RUN yes | sdkmanager --licenses && \
+    sdkmanager --install \
+        "platform-tools" \
+        "emulator" \
+        "system-images;android-30;google_apis;x86" && \
+    echo "no" | avdmanager create avd -n test -k "system-images;android-30;google_apis;x86" --device "pixel"
+
+# Копируем entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 4723 6080
+
+ENTRYPOINT ["/entrypoint.sh"]

@@ -1,6 +1,6 @@
 from aiogram import Router, types
 from instagram.automation.view_stories import create_viewer_driver, view_stories
-from db.database import async_session
+from db.engine import async_session
 from db.models import StoryViewLog
 from aiogram import F
 from scheduler.cron_jobs import check_and_post_reels

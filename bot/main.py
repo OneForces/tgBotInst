@@ -3,10 +3,10 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
-
-from config.config import BOT_TOKEN
-from db.database import Base, engine
 from scheduler.cron_jobs import start_scheduler
+from config.config import BOT_TOKEN
+from db.database import Base
+from db.engine import async_engine
 
 # Импорт Telegram-роутеров
 from bot.handlers import (
@@ -21,8 +21,9 @@ from bot.handlers import (
 
 async def init_db():
     """Создание таблиц в базе данных (если не существуют)."""
-    async with engine.begin() as conn:
+    async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
 
 async def init_bot() -> Dispatcher:

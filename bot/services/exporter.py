@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sqlalchemy import select, desc
-from db.database import async_session
+from db.engine import async_session
 from db.models import StoryViewLog
 from datetime import datetime
 

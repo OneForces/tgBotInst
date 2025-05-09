@@ -1,7 +1,7 @@
 # check_scheduled_posts.py
 
 import asyncio
-from db.database import async_session
+from db.engine import async_session
 from db.models import ScheduledPost
 from sqlalchemy import select
 
