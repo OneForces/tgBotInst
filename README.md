@@ -12,6 +12,8 @@
 git init
 git clone https://github.com/your-username/tgBotInst.git
 cd tgBotInst
+source ./venv/Scripts/activate
+pip install -r requirements.txt
 📁 Или скачай ZIP-архив и распакуй.
 
 ✅ 2. Установи Docker
