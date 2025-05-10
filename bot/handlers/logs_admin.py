@@ -3,13 +3,13 @@ from aiogram.filters import Command
 from sqlalchemy import select, desc
 from db.engine import async_session
 from db.models import StoryViewLog
+from config.config import ADMIN_ID
 
 router = Router()
-ADMIN_ID = 123456789  # ← замените на ваш Telegram ID
 
 @router.message(Command("logs"))
 async def get_logs(msg: types.Message):
-    if msg.from_user.id != ADMIN_ID:
+    if msg.from_user.id not in ADMIN_ID:
         return await msg.answer("⛔ Доступ запрещён")
 
     args = msg.text.split()

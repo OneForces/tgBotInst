@@ -1,7 +1,7 @@
 # Используем минимальный Python-образ
 FROM python:3.11-slim
 
-# Устанавливаем зависимости системы
+# Устанавливаем зависимости системы (нужны для Appium/Android взаимодействия)
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
@@ -16,17 +16,20 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     && apt-get clean
 
-# Устанавливаем рабочую директорию
+# Рабочая директория
 WORKDIR /app
 
-# Копируем зависимости и проект
+# Зависимости Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Копируем весь проект
 COPY . .
 
-# Указываем переменные окружения
+# Устанавливаем переменные окружения
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 ENV DATABASE_URL="postgresql+asyncpg://botuser:botpass@postgres:5432/botdb"
-# Стартовая команда — FastAPI или aiogram запуск (пример)
+
+# Команда запуска (aiogram бот)
 CMD ["python", "-m", "bot.main"]

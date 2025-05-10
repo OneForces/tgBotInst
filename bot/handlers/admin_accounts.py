@@ -2,13 +2,13 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from db.engine import async_session
 from db.models import InstagramAccount
+from config.config import ADMIN_ID
 
 router = Router()
 
-ADMIN_IDS = [123456789]  # ← замените на свой Telegram ID
 
 def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
+    return user_id in ADMIN_ID
 
 @router.message(Command("add_account"))
 async def add_account(msg: types.Message):

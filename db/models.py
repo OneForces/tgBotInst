@@ -27,12 +27,12 @@ class InstagramAccount(Base):
 
 class ReelsTask(Base):
     __tablename__ = "reels_tasks"
+
     id = Column(Integer, primary_key=True)
+    subscriber_id = Column(Integer, ForeignKey("subscribers.id"))
     reels_url = Column(String, nullable=False)
-    post_time = Column(DateTime(timezone=True), nullable=False)
-    status = Column(String, default="pending")  # pending / posted
-    instagram_login = Column(String, nullable=True)
-    instagram_password = Column(String, nullable=True)
+    post_time = Column(DateTime, nullable=False)
+    status = Column(String, default="scheduled")
 
 class StoryViewLog(Base):
     __tablename__ = "story_view_logs"
@@ -68,27 +68,31 @@ class ViewSession(Base):
 
 class ViewTask(Base):
     __tablename__ = "view_tasks"
+
     id = Column(Integer, primary_key=True)
-    subscriber_id = Column(Integer, ForeignKey("subscribers.id"))  # кто запустил просмотр
-    target_profile = Column(String, nullable=False)               # чей сторис смотреть
-    scheduled_time = Column(DateTime, default=datetime.utcnow)
-    status = Column(String, default="created")                   # created/in_progress/completed/error
-    results = relationship("ViewResult", back_populates="task")
+    subscriber_id = Column(Integer, ForeignKey("subscribers.id"))
+    target_profiles = Column(String)
+    scheduled_time = Column(DateTime)
+    status = Column(String)
+
+    results = relationship("ViewResult", back_populates="view_task")
 
 class ViewResult(Base):
     __tablename__ = "view_results"
+
     id = Column(Integer, primary_key=True)
-    task_id = Column(Integer, ForeignKey("view_tasks.id"))
-    account = Column(String, nullable=False)   # аккаунт, с которого смотрели
-    success = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    task = relationship("ViewTask", back_populates="results")
+    view_task_id = Column(Integer, ForeignKey("view_tasks.id"))
+    profile_viewed = Column(String)
+    viewer_account = Column(String)
+    success = Column(Boolean)
+    timestamp = Column(DateTime)
+
+    view_task = relationship("ViewTask", back_populates="results")  # ⬅ вот это
 
 class Subscriber(Base):
     __tablename__ = "subscribers"
 
     id = Column(Integer, primary_key=True)
-    telegram_id = Column(BigInteger, unique=True, nullable=False)
+    telegram_id = Column(Integer, unique=True)
     instagram_login = Column(String, nullable=False)
     instagram_password = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())

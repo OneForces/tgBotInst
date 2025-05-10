@@ -2,16 +2,15 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from bot.services.exporter import export_logs_to_excel
 import os
-
+from config.config import ADMIN_ID
 
 router = Router()
 
 # ✅ Поддержка нескольких админов
-ADMIN_IDS = [123456789]  # Добавь нужные ID
 
 @router.message(Command("export_logs"))
 async def export_logs_cmd(msg: types.Message):
-    if msg.from_user.id not in ADMIN_IDS:
+    if msg.from_user.id not in ADMIN_ID:
         return await msg.answer("⛔ У вас нет доступа к этой команде.")
 
     await msg.answer("📦 Формирую Excel-файл с логами...")

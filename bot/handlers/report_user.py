@@ -2,13 +2,14 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from bot.services.pdf_report import export_user_report_pdf
 import os
+from config.config import ADMIN_ID
 
 router = Router()
-ADMIN_ID = 123456789  # замените
+
 
 @router.message(Command("report"))
 async def user_report(msg: types.Message):
-    if msg.from_user.id != ADMIN_ID:
+    if msg.from_user.id not in ADMIN_ID:
         return await msg.answer("⛔ Доступ запрещён")
 
     parts = msg.text.split()

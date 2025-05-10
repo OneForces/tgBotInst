@@ -3,10 +3,11 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
-from scheduler.cron_jobs import start_scheduler
-from config.config import BOT_TOKEN
+
+from config.config import BOT_TOKEN, ADMIN_ID
 from db.database import Base
 from db.engine import async_engine
+from scheduler.combined_scheduler import main_loop  # Планировщик внутри
 
 # Импорт Telegram-роутеров
 from bot.handlers import (
@@ -16,25 +17,29 @@ from bot.handlers import (
     logs_admin,
     logs_export,
     report_user,
+    view_status,
+    my_report,
+    report,
 )
+
+# Глобальный диспетчер
+dp = Dispatcher(storage=MemoryStorage())
 
 
 async def init_db():
     """Создание таблиц в базе данных (если не существуют)."""
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    print("📦 База данных инициализирована")
 
 
-
-async def init_bot() -> Dispatcher:
-    """Инициализация бота и диспетчера."""
+async def init_bot() -> Bot:
+    """Инициализация бота и регистрация роутеров."""
     bot = Bot(
         token=BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
-    dp = Dispatcher(storage=MemoryStorage())
 
-    # Регистрация всех роутеров
     routers = [
         reels_submission.router,
         admin_accounts.router,
@@ -42,21 +47,29 @@ async def init_bot() -> Dispatcher:
         logs_admin.router,
         logs_export.router,
         report_user.router,
+        view_status.router,
+        my_report.router,
+        report.router,
     ]
     for r in routers:
         dp.include_router(r)
 
-    return bot, dp
+    print("🤖 Роутеры загружены")
+    return bot
 
 
 async def main():
     await init_db()
-    bot, dp = await init_bot()
+    bot = await init_bot()
 
-    # Запуск планировщика
-    start_scheduler()
+    # Проверим ID админа
+    me = await bot.get_me()
+    print(f"🚀 Бот {me.username} запущен | ID: {me.id}")
+    print(f"🔐 Админ ID(ы): {ADMIN_ID}")
 
-    print("🚀 Бот запущен и работает.")
+    # Планировщик — как фоновая задача
+    asyncio.create_task(main_loop())
+
     try:
         await dp.start_polling(bot)
     except Exception as e:
@@ -69,4 +82,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("⏹️ Остановка по запросу пользователя")
     except Exception as e:
-        print(f"🔥 Критическая ошибка: {e}")
+        print(f"🔥 Критическая ошибка запуска: {e}")
